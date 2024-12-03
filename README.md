@@ -1,2 +1,2 @@
-[Documentation](https://docs.rs/crate/gstring)
+[Documentation](https://docs.rs/gstring)
 
