@@ -140,7 +140,7 @@ impl GString {
             .collect()
     }
 
-    /*
+    /**
     Insert a string at an index
 
     ```
