@@ -4,6 +4,10 @@ use {
     unicode_segmentation::UnicodeSegmentation,
 };
 
+#[allow(unused_imports)]
+use std::ops::{RangeFrom, RangeFull, RangeTo};
+// NOTE: These are included for links in the documentation.
+
 //--------------------------------------------------------------------------------------------------
 
 /// String with support for Unicode graphemes
@@ -14,7 +18,7 @@ pub struct GString {
 
 impl GString {
     /**
-    Create a new [`GString`] from a `&str`
+    Create a new [`GString`] from a [`&str`]
 
     ```
     use gstring::*;
@@ -36,12 +40,11 @@ impl GString {
     ```
     use gstring::*;
 
-    let g = GString::from("a\u{310}e\u{301}o\u{308}\u{332}")
-        .graphemes()
-        .to_vec();
+    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    let g = s.graphemes();
 
-    assert_eq!(g.len(), 3);
     assert_eq!(g, ["a\u{310}", "e\u{301}", "o\u{308}\u{332}"]);
+    assert_eq!(g.len(), 3);
     ```
     */
     pub fn graphemes(&self) -> &[String] {
@@ -54,11 +57,11 @@ impl GString {
     ```
     use gstring::*;
 
-    let g = GString::from("a\u{310}e\u{301}o\u{308}\u{332}")
-        .into_graphemes();
+    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    let g = s.into_graphemes();
 
-    assert_eq!(g.len(), 3);
     assert_eq!(g, ["a\u{310}", "e\u{301}", "o\u{308}\u{332}"]);
+    assert_eq!(g.len(), 3);
     ```
     */
     pub fn into_graphemes(self) -> Vec<String> {
@@ -283,6 +286,8 @@ impl GString {
     assert_eq!(s.slice(0..3), S);
     assert_eq!(s, S);
     ```
+
+    See also the `GString::index` method.
     */
     pub fn slice(&self, range: Range<usize>) -> GString {
         GString {
@@ -304,6 +309,8 @@ impl GString {
     assert_eq!(i.next().unwrap(), "o\u{308}\u{332}");
     assert_eq!(i.next(), None);
     ```
+
+    See also the [`GString::into_iter`] method.
     */
     pub fn iter(&self) -> GStringRefIter {
         GStringRefIter {
@@ -318,13 +325,16 @@ impl GString {
     ```
     use gstring::*;
 
-    let mut i = GString::from("a\u{310}e\u{301}o\u{308}\u{332}").into_iter();
+    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    let mut i = s.into_iter();
 
     assert_eq!(i.next().unwrap(), "a\u{310}");
     assert_eq!(i.next().unwrap(), "e\u{301}");
     assert_eq!(i.next().unwrap(), "o\u{308}\u{332}");
     assert_eq!(i.next(), None);
     ```
+
+    See also the [`GString::iter`] method.
     */
     #[allow(clippy::should_implement_trait)]
     pub fn into_iter(self) -> GStringIter {
@@ -337,6 +347,9 @@ impl GString {
 
 impl std::fmt::Display for GString {
     /**
+    Print a [`GString`] directly in [`format`], [`write`], etc macros or convert to a [`String`]
+    using the [`to_string`][ToString::to_string] method
+
     ```
     use gstring::*;
 
@@ -353,6 +366,8 @@ impl std::fmt::Display for GString {
 
 impl std::fmt::Debug for GString {
     /**
+    Debug print a [`GString`] directly in [`format`], [`write`], etc macros
+
     ```
     use gstring::*;
 
@@ -376,6 +391,9 @@ where
     type Output = I::Output;
 
     /**
+    Directly index a slice of [`GString`]'s graphemes with a [`usize`] index, `a..b`
+    [`Range<usize>`], `a..` [`RangeFrom<usize>`], `..b` [`RangeTo<usize>`], or `..` [`RangeFull`]
+
     ```
     use gstring::*;
 
@@ -398,6 +416,8 @@ where
     }
     assert_eq!(&s[..], GRAPHEMES);
     ```
+
+    See also the [`GString::slice`] method.
     */
     fn index(&self, index: I) -> &Self::Output {
         &self.data[index]
@@ -406,6 +426,8 @@ where
 
 impl std::cmp::PartialEq<GString> for GString {
     /**
+    Compare two [`GString`]s
+
     ```
     use gstring::*;
 
@@ -422,6 +444,8 @@ impl std::cmp::PartialEq<GString> for GString {
 
 impl std::cmp::PartialEq<GString> for &GString {
     /**
+    Compare a [`GString`] to a `&`[`GString`]
+
     ```
     use gstring::*;
 
@@ -440,6 +464,8 @@ impl std::cmp::PartialEq<GString> for &GString {
 
 impl std::cmp::PartialEq<String> for GString {
     /**
+    Compare a [`GString`] to a [`String`]
+
     ```
     use gstring::*;
 
@@ -456,6 +482,8 @@ impl std::cmp::PartialEq<String> for GString {
 
 impl std::cmp::PartialEq<&str> for GString {
     /**
+    Compare a [`GString`] to a [`&str`]
+
     ```
     use gstring::*;
 
@@ -482,6 +510,8 @@ impl Iterator for GStringRefIter<'_> {
     type Item = String;
 
     /**
+    Get the next grapheme by reference
+
     ```
     use gstring::*;
 
@@ -513,6 +543,8 @@ impl Iterator for GStringIter {
     type Item = String;
 
     /**
+    Get the next grapheme
+
     ```
     use gstring::*;
 
