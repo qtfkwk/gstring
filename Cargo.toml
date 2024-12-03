@@ -1,10 +1,10 @@
 [package]
 name = "gstring"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "String with support for Unicode graphemes"
-license = "MIT"
 repository = "https://github.com/qtfkwk/gstring"
+license = "MIT"
 
 [dependencies]
 serde = { version = "1.0.215", features = ["derive"] }

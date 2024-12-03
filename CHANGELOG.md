@@ -5,4 +5,5 @@
     * 0.1.2 (2024-12-03): Fix documentation
     * 0.1.3 (2024-12-03): Fix readme
     * 0.1.4 (2024-12-03): Fix documentation
+    * 0.1.5 (2024-12-03): Miscellaneous fixes
 

@@ -71,9 +71,7 @@ impl GString {
     ```
     use gstring::*;
 
-    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
-
-    let s = GString::from(S);
+    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
     assert_eq!(s.len(), 3);
 
     let s = GString::from("");
@@ -91,8 +89,10 @@ impl GString {
     use gstring::*;
 
     let s = GString::from("");
-
     assert!(s.is_empty());
+
+    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    assert!(!s.is_empty());
     ```
     */
     pub fn is_empty(&self) -> bool {
@@ -107,8 +107,8 @@ impl GString {
 
     let c = GString::from("a\u{310}e\u{301}o\u{308}\u{332}").chars();
 
-    assert_eq!(c.len(), 7);
     assert_eq!(c, ['a', '\u{310}', 'e', '\u{301}', 'o', '\u{308}', '\u{332}']);
+    assert_eq!(c.len(), 7);
     ```
     */
     pub fn chars(&self) -> Vec<char> {
@@ -126,11 +126,11 @@ impl GString {
 
     let b = GString::from("a\u{310}e\u{301}o\u{308}\u{332}").bytes();
 
-    assert_eq!(b.len(), 11);
     assert_eq!(
         b,
         [0x61, 0xcc, 0x90, 0x65, 0xcc, 0x81, 0x6f, 0xcc, 0x88, 0xcc, 0xb2],
     );
+    assert_eq!(b.len(), 11);
     ```
     */
     pub fn bytes(&self) -> Vec<u8> {
@@ -149,7 +149,6 @@ impl GString {
     let mut s = GString::from("a\u{310}o\u{308}\u{332}");
 
     s.insert(1, "e\u{301}");
-
     assert_eq!(s, "a\u{310}e\u{301}o\u{308}\u{332}");
     ```
     */
@@ -473,7 +472,7 @@ impl std::cmp::PartialEq<&str> for GString {
 
 //--------------------------------------------------------------------------------------------------
 
-/// Created by [`GString.iter`] to iterate graphemes by reference
+/// Created by [`GString::iter`] to iterate graphemes by reference
 pub struct GStringRefIter<'a> {
     gstring: &'a GString,
     idx: usize,
@@ -504,7 +503,7 @@ impl Iterator for GStringRefIter<'_> {
 
 //--------------------------------------------------------------------------------------------------
 
-/// Created by [`GString.into_iter`] to iterate graphemes
+/// Created by [`GString::into_iter`] to iterate graphemes
 pub struct GStringIter {
     gstring: GString,
     idx: usize,
