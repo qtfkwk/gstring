@@ -6,6 +6,7 @@ use {
 
 //--------------------------------------------------------------------------------------------------
 
+/// String with support for Unicode graphemes
 #[derive(Clone, Serialize)]
 pub struct GString {
     data: Vec<String>,
@@ -13,6 +14,8 @@ pub struct GString {
 
 impl GString {
     /**
+    Create a new [`GString`] from a `&str`
+
     ```
     use gstring::*;
 
@@ -28,6 +31,8 @@ impl GString {
     }
 
     /**
+    Return a slice reference to the internal graphemes
+
     ```
     use gstring::*;
 
@@ -44,6 +49,8 @@ impl GString {
     }
 
     /**
+    Consume the [`GString`] and convert to a [`Vec`] of graphemes
+
     ```
     use gstring::*;
 
@@ -59,6 +66,8 @@ impl GString {
     }
 
     /**
+    Return the count of graphemes
+
     ```
     use gstring::*;
 
@@ -76,6 +85,8 @@ impl GString {
     }
 
     /**
+    Return [`true`] if the [`GString`] has zero graphemes otherwise return [`false`]
+
     ```
     use gstring::*;
 
@@ -89,6 +100,8 @@ impl GString {
     }
 
     /**
+    Return a [`Vec`] of [`char`]s
+
     ```
     use gstring::*;
 
@@ -106,6 +119,8 @@ impl GString {
     }
 
     /**
+    Return a [`Vec`] of [`u8`]s
+
     ```
     use gstring::*;
 
@@ -126,6 +141,8 @@ impl GString {
     }
 
     /*
+    Insert a string at an index
+
     ```
     use gstring::*;
 
@@ -143,6 +160,8 @@ impl GString {
     }
 
     /**
+    Remove a grapheme at an index
+
     ```
     use gstring::*;
 
@@ -159,6 +178,8 @@ impl GString {
     }
 
     /**
+    Append a string
+
     ```
     use gstring::*;
 
@@ -176,6 +197,8 @@ impl GString {
     }
 
     /**
+    Remove the last grapheme
+
     ```
     use gstring::*;
 
@@ -190,6 +213,8 @@ impl GString {
     }
 
     /**
+    Replace a range with the given string
+
     ```
     use gstring::*;
 
@@ -215,6 +240,8 @@ impl GString {
     }
 
     /**
+    Delete and return a range
+
     ```
     use gstring::*;
 
@@ -240,6 +267,8 @@ impl GString {
     }
 
     /**
+    Create a new [`GString`] from a given range
+
     ```
     use gstring::*;
 
@@ -263,6 +292,8 @@ impl GString {
     }
 
     /**
+    Create a [`GStringRefIter`] for iterating graphemes by reference
+
     ```
     use gstring::*;
 
@@ -283,6 +314,8 @@ impl GString {
     }
 
     /**
+    Consume the [`GString`] and convert into a [`GStringIter`] for iterating graphemes
+
     ```
     use gstring::*;
 
@@ -440,6 +473,7 @@ impl std::cmp::PartialEq<&str> for GString {
 
 //--------------------------------------------------------------------------------------------------
 
+/// Created by [`GString.iter`] to iterate graphemes by reference
 pub struct GStringRefIter<'a> {
     gstring: &'a GString,
     idx: usize,
@@ -470,6 +504,7 @@ impl Iterator for GStringRefIter<'_> {
 
 //--------------------------------------------------------------------------------------------------
 
+/// Created by [`GString.into_iter`] to iterate graphemes
 pub struct GStringIter {
     gstring: GString,
     idx: usize,
@@ -500,6 +535,8 @@ impl Iterator for GStringIter {
 //--------------------------------------------------------------------------------------------------
 
 /**
+Convert a [`&str`] into a [`Vec`] of graphemes
+
 ```
 use gstring::*;
 
