@@ -7,4 +7,5 @@
     * 0.1.4 (2024-12-03): Fix documentation
     * 0.1.5 (2024-12-03): Miscellaneous fixes
     * 0.1.6 (2024-12-03): Improve documentation/tests
+    * 0.1.7 (2024-12-04): Add makefile
 
