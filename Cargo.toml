@@ -1,6 +1,6 @@
 [package]
 name = "gstring"
-version = "0.1.7"
+version = "0.2.0"
 edition = "2021"
 description = "String with support for Unicode graphemes"
 repository = "https://github.com/qtfkwk/gstring"
