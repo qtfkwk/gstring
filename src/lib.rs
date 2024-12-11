@@ -26,7 +26,6 @@ impl GString {
     const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
 
     let s = GString::from(S);
-
     assert_eq!(s, S);
     ```
     */
@@ -565,72 +564,59 @@ impl Iterator for GStringIter {
 
 //--------------------------------------------------------------------------------------------------
 
+/**
+Trait for easy conversion to [`GString`] or graphemes [`Vec<String>`] from custom or foreign types
+like [`&str`] and [`String`]
+
+```
+use gstring::*;
+
+// From &str
+
+const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+const V: &[&str] = &["a\u{310}", "e\u{301}", "o\u{308}\u{332}"];
+
+let g = S.gstring();
+assert_eq!(g, S);
+
+let v = S.graphemes();
+assert_eq!(v, V);
+
+// From String
+
+let s = String::from(S);
+
+let g = s.gstring();
+assert_eq!(g, S);
+
+let v = s.graphemes();
+assert_eq!(v, V);
+```
+*/
 pub trait GStringTrait {
     fn gstring(&self) -> GString;
     fn graphemes(&self) -> Vec<String>;
 }
 
 impl GStringTrait for String {
-    /**
-    Create a [`GString`] from a [`String`] via [`GStringTrait::gstring`] method
-
-    ```
-    use gstring::*;
-
-    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
-
-    let s = String::from(S).gstring();
-    assert_eq!(s, S);
-    ```
-    */
+    /// Create a [`GString`] from a [`String`] via [`GStringTrait::gstring`] method
     fn gstring(&self) -> GString {
         GString::from(self)
     }
 
-    /**
-    Convert a [`String`] into a [`Vec`] of graphemes via [`GStringTrait::graphemes`] method
-
-    ```
-    use gstring::*;
-
-    let g = String::from("a\u{310}e\u{301}o\u{308}\u{332}").graphemes();
-
-    assert_eq!(g, ["a\u{310}", "e\u{301}", "o\u{308}\u{332}"]);
-    ```
-    */
+    /// Convert a [`String`] into a [`Vec`] of graphemes via [`GStringTrait::graphemes`] method
     fn graphemes(&self) -> Vec<String> {
         graphemes(self)
     }
 }
 
 impl GStringTrait for &str {
-    /**
-    Create a [`GString`] from a [`&str`] via [`GStringTrait::gstring`] method
-
-    ```
-    use gstring::*;
-
-    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
-
-    let s = S.gstring();
-    assert_eq!(s, S);
-    ```
-    */
+    /// Create a [`GString`] from a [`&str`] via [`GStringTrait::gstring`] method
     fn gstring(&self) -> GString {
         GString::from(self)
     }
 
-    /**
-    Convert a [`&str`] into a [`Vec`] of graphemes via [`GStringTrait::graphemes`] method
-
-    ```
-    use gstring::*;
-
-    let g = "a\u{310}e\u{301}o\u{308}\u{332}".graphemes();
-
-    assert_eq!(g, ["a\u{310}", "e\u{301}", "o\u{308}\u{332}"]);
-    ```
-    */
+    /// Convert a [`&str`] into a [`Vec`] of graphemes via [`GStringTrait::graphemes`] method
     fn graphemes(&self) -> Vec<String> {
         graphemes(self)
     }
@@ -645,7 +631,6 @@ Convert a [`&str`] into a [`Vec`] of graphemes
 use gstring::*;
 
 let g = graphemes("a\u{310}e\u{301}o\u{308}\u{332}");
-
 assert_eq!(g, ["a\u{310}", "e\u{301}", "o\u{308}\u{332}"]);
 ```
 */
