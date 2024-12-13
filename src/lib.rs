@@ -479,8 +479,12 @@ impl std::cmp::PartialEq<GString> for GString {
 
     const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
 
-    assert_eq!(GString::from(S), GString::from(S));
-    assert_ne!(GString::from(S), GString::from(""));
+    let s1 = GString::from(S);
+    let s2 = GString::from(S);
+    let s3 = GString::from(S);
+
+    assert_eq!(s1, s2);
+    assert_ne!(s3, GString::from(""));
     ```
     */
     fn eq(&self, other: &GString) -> bool {
@@ -497,12 +501,15 @@ impl std::cmp::PartialEq<GString> for &GString {
 
     const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
 
-    let s = GString::from(S);
+    let s1 = GString::from(S);
+    let s2 = GString::from(S);
+    let empty = GString::from("");
 
-    assert_eq!(&s, GString::from(S));
-    assert_ne!(&s, GString::from(""));
-    assert_eq!(&s, &GString::from(S));
-    assert_ne!(&s, &GString::from(""));
+    assert_eq!(&s1, s2);
+    assert_ne!(&s1, empty);
+
+    assert_eq!(&s1, &s2);
+    assert_ne!(&s1, &empty);
     ```
     */
     fn eq(&self, other: &GString) -> bool {
@@ -622,8 +629,8 @@ impl Iterator for GStringIter {
 //--------------------------------------------------------------------------------------------------
 
 /**
-Trait for easy conversion to [`GString`] or graphemes [`Vec<String>`] from custom or foreign types
-like [`&str`] and [`String`]
+Trait for easy conversion to [`GString`] or [`Vec`] of graphemes from custom or foreign types like
+[`&str`] and [`String`]
 
 ```
 use gstring::*;
@@ -631,27 +638,27 @@ use gstring::*;
 // From &str
 
 const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
-const V: &[&str] = &["a\u{310}", "e\u{301}", "o\u{308}\u{332}"];
+const G: &[&str] = &["a\u{310}", "e\u{301}", "o\u{308}\u{332}"];
 
 // &str => GString
-let g = S.gstring();
-assert_eq!(g, S);
+let s = S.gstring();
+assert_eq!(s, S);
 
 // &str => Vec<String>
-let v = S.graphemes();
-assert_eq!(v, V);
+let g = S.graphemes();
+assert_eq!(g, G);
 
 // From String
 
-let s = String::from(S);
+let a = String::from(S);
 
 // String => GString
-let g = s.gstring();
-assert_eq!(g, S);
+let s = a.gstring();
+assert_eq!(s, S);
 
 // String => Vec<String>
-let v = s.graphemes();
-assert_eq!(v, V);
+let g = a.graphemes();
+assert_eq!(g, G);
 ```
 */
 pub trait GStringTrait {
