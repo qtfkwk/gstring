@@ -11,4 +11,5 @@
 * 0.2.0 (2024-12-05): Add the `GStringTrait` and implement its methods for `String` and `&str`
     * 0.2.1 (2024-12-11): Fix documentation; update dependencies
     * 0.2.2 (2024-12-12): Improve documentation, tests, and trait implementations
+    * 0.2.3 (2024-12-12): Improve test for pop method
 

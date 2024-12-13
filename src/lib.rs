@@ -227,6 +227,15 @@ impl GString {
 
     assert_eq!(s.pop().unwrap(), "o\u{308}\u{332}");
     assert_eq!(s, "a\u{310}e\u{301}");
+
+    assert_eq!(s.pop().unwrap(), "e\u{301}");
+    assert_eq!(s, "a\u{310}");
+
+    assert_eq!(s.pop().unwrap(), "a\u{310}");
+    assert_eq!(s, "");
+
+    assert_eq!(s.pop(), None);
+    assert_eq!(s, "");
     ```
     */
     pub fn pop(&mut self) -> Option<GString> {
