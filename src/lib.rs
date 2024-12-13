@@ -26,6 +26,7 @@ impl GString {
     const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
 
     let s = GString::from(S);
+
     assert_eq!(s, S);
     ```
     */
@@ -39,11 +40,14 @@ impl GString {
     ```
     use gstring::*;
 
-    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+    const G: &[&str] = &["a\u{310}", "e\u{301}", "o\u{308}\u{332}"];
+
+    let s = GString::from(S);
     let g = s.graphemes();
 
-    assert_eq!(g, ["a\u{310}", "e\u{301}", "o\u{308}\u{332}"]);
-    assert_eq!(g.len(), 3);
+    assert_eq!(g, G);
+    assert_eq!(g.len(), G.len());
     ```
     */
     pub fn graphemes(&self) -> &[String] {
@@ -56,11 +60,13 @@ impl GString {
     ```
     use gstring::*;
 
-    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
-    let g = s.into_graphemes();
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+    const G: &[&str] = &["a\u{310}", "e\u{301}", "o\u{308}\u{332}"];
 
-    assert_eq!(g, ["a\u{310}", "e\u{301}", "o\u{308}\u{332}"]);
-    assert_eq!(g.len(), 3);
+    let g = GString::from(S).into_graphemes();
+
+    assert_eq!(g, G);
+    assert_eq!(g.len(), G.len());
     ```
     */
     pub fn into_graphemes(self) -> Vec<String> {
@@ -73,7 +79,9 @@ impl GString {
     ```
     use gstring::*;
 
-    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+
+    let s = GString::from(S);
     assert_eq!(s.len(), 3);
 
     let s = GString::from("");
@@ -90,10 +98,12 @@ impl GString {
     ```
     use gstring::*;
 
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+
     let s = GString::from("");
     assert!(s.is_empty());
 
-    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    let s = GString::from(S);
     assert!(!s.is_empty());
     ```
     */
@@ -107,10 +117,13 @@ impl GString {
     ```
     use gstring::*;
 
-    let c = GString::from("a\u{310}e\u{301}o\u{308}\u{332}").chars();
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+    const C: &[char] = &['a', '\u{310}', 'e', '\u{301}', 'o', '\u{308}', '\u{332}'];
 
-    assert_eq!(c, ['a', '\u{310}', 'e', '\u{301}', 'o', '\u{308}', '\u{332}']);
-    assert_eq!(c.len(), 7);
+    let c = GString::from(S).chars();
+
+    assert_eq!(c, C);
+    assert_eq!(c.len(), C.len());
     ```
     */
     pub fn chars(&self) -> Vec<char> {
@@ -126,13 +139,13 @@ impl GString {
     ```
     use gstring::*;
 
-    let b = GString::from("a\u{310}e\u{301}o\u{308}\u{332}").bytes();
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+    const B: &[u8] = &[0x61, 0xcc, 0x90, 0x65, 0xcc, 0x81, 0x6f, 0xcc, 0x88, 0xcc, 0xb2];
 
-    assert_eq!(
-        b,
-        [0x61, 0xcc, 0x90, 0x65, 0xcc, 0x81, 0x6f, 0xcc, 0x88, 0xcc, 0xb2],
-    );
-    assert_eq!(b.len(), 11);
+    let b = GString::from(S).bytes();
+
+    assert_eq!(b, B);
+    assert_eq!(b.len(), B.len());
     ```
     */
     pub fn bytes(&self) -> Vec<u8> {
@@ -148,10 +161,12 @@ impl GString {
     ```
     use gstring::*;
 
-    let mut s = GString::from("a\u{310}o\u{308}\u{332}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
 
+    let mut s = GString::from("a\u{310}o\u{308}\u{332}");
     s.insert(1, "e\u{301}");
-    assert_eq!(s, "a\u{310}e\u{301}o\u{308}\u{332}");
+
+    assert_eq!(s, S);
     ```
     */
     pub fn insert(&mut self, idx: usize, string: &str) {
@@ -166,7 +181,9 @@ impl GString {
     ```
     use gstring::*;
 
-    let mut s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+
+    let mut s = GString::from(S);
 
     assert_eq!(s.remove(1), "e\u{301}");
     assert_eq!(s, "a\u{310}o\u{308}\u{332}");
@@ -179,16 +196,17 @@ impl GString {
     }
 
     /**
-    Append a string
+    Append a [`&str`]
 
     ```
     use gstring::*;
 
-    let mut s = GString::from("a\u{310}e\u{301}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
 
+    let mut s = GString::from("a\u{310}e\u{301}");
     s.push("o\u{308}\u{332}");
 
-    assert_eq!(s, "a\u{310}e\u{301}o\u{308}\u{332}");
+    assert_eq!(s, S);
     ```
     */
     pub fn push(&mut self, string: &str) {
@@ -198,12 +216,14 @@ impl GString {
     }
 
     /**
-    Remove the last grapheme
+    Remove the last grapheme and return it as a new [`GString`]
 
     ```
     use gstring::*;
 
-    let mut s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+
+    let mut s = GString::from(S);
 
     assert_eq!(s.pop().unwrap(), "o\u{308}\u{332}");
     assert_eq!(s, "a\u{310}e\u{301}");
@@ -214,12 +234,17 @@ impl GString {
     }
 
     /**
-    Replace a range with the given string
+    Replace a range with a [`&str`]
+
+    The range can be a `a..b` [`Range<usize>`], `a..` [`RangeFrom<usize>`], `..b`
+    [`RangeTo<usize>`], or `..` [`RangeFull`].
 
     ```
     use gstring::*;
 
-    let mut s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+
+    let mut s = GString::from(S);
 
     s.splice(0..2, "e\u{301}a\u{310}");
     assert_eq!(s, "e\u{301}a\u{310}o\u{308}\u{332}");
@@ -241,7 +266,10 @@ impl GString {
     }
 
     /**
-    Delete and return a range
+    Remove and return a range of graphemes
+
+    The range can be a `a..b` [`Range<usize>`], `a..` [`RangeFrom<usize>`], `..b`
+    [`RangeTo<usize>`], or `..` [`RangeFull`].
 
     ```
     use gstring::*;
@@ -268,7 +296,7 @@ impl GString {
     }
 
     /**
-    Create a new [`GString`] from a given range
+    Create a new [`GString`] from an `a..b` [`Range<usize>`]
 
     ```
     use gstring::*;
@@ -283,7 +311,6 @@ impl GString {
     assert_eq!(s.slice(0..2), "a\u{310}e\u{301}");
     assert_eq!(s.slice(1..3), "e\u{301}o\u{308}\u{332}");
     assert_eq!(s.slice(0..3), S);
-    assert_eq!(s, S);
     ```
 
     See also the `GString::index` method.
@@ -300,7 +327,9 @@ impl GString {
     ```
     use gstring::*;
 
-    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+
+    let s = GString::from(S);
     let mut i = s.iter();
 
     assert_eq!(i.next().unwrap(), "a\u{310}");
@@ -324,7 +353,9 @@ impl GString {
     ```
     use gstring::*;
 
-    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+
+    let s = GString::from(S);
     let mut i = s.into_iter();
 
     assert_eq!(i.next().unwrap(), "a\u{310}");
@@ -344,6 +375,8 @@ impl GString {
     }
 }
 
+//--------------------------------------------------------------------------------------------------
+
 impl std::fmt::Display for GString {
     /**
     Print a [`GString`] directly in [`format`], [`write`], etc macros or convert to a [`String`]
@@ -354,8 +387,11 @@ impl std::fmt::Display for GString {
 
     const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
 
-    assert_eq!(format!("{}", GString::from(S)), S);
-    assert_eq!(GString::from(S).to_string(), S);
+    let s = GString::from(S);
+
+    assert_eq!(format!("{s}"), S);
+    assert_eq!(format!("{}", s), S);
+    assert_eq!(s.to_string(), S);
     ```
     */
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -365,7 +401,8 @@ impl std::fmt::Display for GString {
 
 impl std::fmt::Debug for GString {
     /**
-    Debug print a [`GString`] directly in [`format`], [`write`], etc macros
+    Debug print a [`GString`] in [`format`], [`print`], [`println`], [`write`], [`writeln`], etc
+    macros
 
     ```
     use gstring::*;
@@ -390,30 +427,31 @@ where
     type Output = I::Output;
 
     /**
-    Directly index a slice of [`GString`]'s graphemes with a [`usize`] index, `a..b`
-    [`Range<usize>`], `a..` [`RangeFrom<usize>`], `..b` [`RangeTo<usize>`], or `..` [`RangeFull`]
+    Index a slice of [`GString`]'s graphemes with a [`usize`] index, `a..b` [`Range<usize>`], `a..`
+    [`RangeFrom<usize>`], `..b` [`RangeTo<usize>`], or `..` [`RangeFull`]
 
     ```
     use gstring::*;
 
-    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+    const G: &[&str] = &["a\u{310}", "e\u{301}", "o\u{308}\u{332}"];
 
-    const GRAPHEMES: &[&str] = &["a\u{310}", "e\u{301}", "o\u{308}\u{332}"];
+    let s = GString::from(S);
 
-    assert_eq!(&s[0], GRAPHEMES[0]);
-    assert_eq!(&s[1], GRAPHEMES[1]);
-    assert_eq!(&s[2], GRAPHEMES[2]);
+    assert_eq!(&s[0], G[0]);
+    assert_eq!(&s[1], G[1]);
+    assert_eq!(&s[2], G[2]);
 
     for start in 0..3 {
         for stop in 1..4 {
             if stop > start {
-                assert_eq!(&s[start..stop], GRAPHEMES[start..stop].to_vec());
-                assert_eq!(&s[..stop], GRAPHEMES[..stop].to_vec());
+                assert_eq!(&s[start..stop], G[start..stop].to_vec());
+                assert_eq!(&s[..stop], G[..stop].to_vec());
             }
         }
-        assert_eq!(&s[start..], GRAPHEMES[start..].to_vec());
+        assert_eq!(&s[start..], G[start..].to_vec());
     }
-    assert_eq!(&s[..], GRAPHEMES);
+    assert_eq!(&s[..], G);
     ```
 
     See also the [`GString::slice`] method.
@@ -443,7 +481,7 @@ impl std::cmp::PartialEq<GString> for GString {
 
 impl std::cmp::PartialEq<GString> for &GString {
     /**
-    Compare a [`GString`] to a `&`[`GString`]
+    Compare a [`GString`] to a `&`[`GString`] (or two `&`[`GString`]s)
 
     ```
     use gstring::*;
@@ -454,6 +492,8 @@ impl std::cmp::PartialEq<GString> for &GString {
 
     assert_eq!(&s, GString::from(S));
     assert_ne!(&s, GString::from(""));
+    assert_eq!(&s, &GString::from(S));
+    assert_ne!(&s, &GString::from(""));
     ```
     */
     fn eq(&self, other: &GString) -> bool {
@@ -470,8 +510,10 @@ impl std::cmp::PartialEq<String> for GString {
 
     const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
 
-    assert_eq!(GString::from(S), S.to_string());
-    assert_ne!(GString::from(S), String::new());
+    let s = GString::from(S);
+
+    assert_eq!(s, S.to_string());
+    assert_ne!(s, String::new());
     ```
     */
     fn eq(&self, other: &String) -> bool {
@@ -488,8 +530,10 @@ impl std::cmp::PartialEq<&str> for GString {
 
     const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
 
-    assert_eq!(GString::from(S), S);
-    assert_ne!(GString::from(S), "");
+    let s = GString::from(S);
+
+    assert_eq!(s, S);
+    assert_ne!(s, "");
     ```
     */
     fn eq(&self, other: &&str) -> bool {
@@ -514,7 +558,9 @@ impl Iterator for GStringRefIter<'_> {
     ```
     use gstring::*;
 
-    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+
+    let s = GString::from(S);
     let mut i = s.iter();
 
     assert_eq!(i.next().unwrap(), "a\u{310}");
@@ -547,7 +593,9 @@ impl Iterator for GStringIter {
     ```
     use gstring::*;
 
-    let mut i = GString::from("a\u{310}e\u{301}o\u{308}\u{332}").into_iter();
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+
+    let mut i = GString::from(S).into_iter();
 
     assert_eq!(i.next().unwrap(), "a\u{310}");
     assert_eq!(i.next().unwrap(), "e\u{301}");
@@ -576,9 +624,11 @@ use gstring::*;
 const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
 const V: &[&str] = &["a\u{310}", "e\u{301}", "o\u{308}\u{332}"];
 
+// &str => GString
 let g = S.gstring();
 assert_eq!(g, S);
 
+// &str => Vec<String>
 let v = S.graphemes();
 assert_eq!(v, V);
 
@@ -586,52 +636,61 @@ assert_eq!(v, V);
 
 let s = String::from(S);
 
+// String => GString
 let g = s.gstring();
 assert_eq!(g, S);
 
+// String => Vec<String>
 let v = s.graphemes();
 assert_eq!(v, V);
 ```
 */
 pub trait GStringTrait {
+    /// Create a new [`GString`]
     fn gstring(&self) -> GString;
+
+    /// Create a new [`Vec`] of graphemes
     fn graphemes(&self) -> Vec<String>;
 }
 
 impl GStringTrait for String {
-    /// Create a [`GString`] from a [`String`] via [`GStringTrait::gstring`] method
+    /// Create a new [`GString`] from a [`String`]
     fn gstring(&self) -> GString {
         GString::from(self)
     }
 
-    /// Convert a [`String`] into a [`Vec`] of graphemes via [`GStringTrait::graphemes`] method
+    /// Create a new [`Vec`] of graphemes from a [`String`]
     fn graphemes(&self) -> Vec<String> {
-        graphemes(self)
+        self.gstring().into_graphemes()
     }
 }
 
 impl GStringTrait for &str {
-    /// Create a [`GString`] from a [`&str`] via [`GStringTrait::gstring`] method
+    /// Create a new [`GString`] from a [`&str`]
     fn gstring(&self) -> GString {
         GString::from(self)
     }
 
-    /// Convert a [`&str`] into a [`Vec`] of graphemes via [`GStringTrait::graphemes`] method
+    /// Create a new [`Vec`] of graphemes from a [`&str`]
     fn graphemes(&self) -> Vec<String> {
-        graphemes(self)
+        self.gstring().into_graphemes()
     }
 }
 
 //--------------------------------------------------------------------------------------------------
 
 /**
-Convert a [`&str`] into a [`Vec`] of graphemes
+Create a [`Vec`] of graphemes from a [`&str`]
 
 ```
 use gstring::*;
 
-let g = graphemes("a\u{310}e\u{301}o\u{308}\u{332}");
-assert_eq!(g, ["a\u{310}", "e\u{301}", "o\u{308}\u{332}"]);
+const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+const G: &[&str] = &["a\u{310}", "e\u{301}", "o\u{308}\u{332}"];
+
+let g = graphemes(S);
+
+assert_eq!(g, G);
 ```
 */
 pub fn graphemes(s: &str) -> Vec<String> {
