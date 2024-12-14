@@ -1,7 +1,7 @@
 use {
     serde::Serialize,
     std::ops::{Range, RangeBounds},
-    unicode_segmentation::UnicodeSegmentation,
+    unicode_segmentation::{Graphemes, UnicodeSegmentation},
 };
 
 #[allow(unused_imports)]
@@ -629,8 +629,8 @@ impl Iterator for GStringIter {
 //--------------------------------------------------------------------------------------------------
 
 /**
-Trait for easy conversion to [`GString`] or [`Vec`] of graphemes from custom or foreign types like
-[`&str`] and [`String`]
+Trait for easy conversion to [`GString`], [`Vec`] of graphemes, or [`Graphemes`] iterator from
+custom or foreign types like [`&str`] and [`String`]
 
 ```
 use gstring::*;
@@ -648,6 +648,10 @@ assert_eq!(s, S);
 let g = S.graphemes();
 assert_eq!(g, G);
 
+// &str => Graphemes
+let mut g = S.graphemes_iter();
+assert_eq!(g.count(), G.len());
+
 // From String
 
 let a = String::from(S);
@@ -659,6 +663,10 @@ assert_eq!(s, S);
 // String => Vec<String>
 let g = a.graphemes();
 assert_eq!(g, G);
+
+// &str => Graphemes
+let mut g = a.graphemes_iter();
+assert_eq!(g.count(), G.len());
 ```
 */
 pub trait GStringTrait {
@@ -667,6 +675,9 @@ pub trait GStringTrait {
 
     /// Create a new [`Vec`] of graphemes
     fn graphemes(&self) -> Vec<String>;
+
+    /// Return a [`Graphemes`] iterator
+    fn graphemes_iter(&self) -> Graphemes;
 }
 
 impl GStringTrait for String {
@@ -679,6 +690,11 @@ impl GStringTrait for String {
     fn graphemes(&self) -> Vec<String> {
         self.gstring().into_graphemes()
     }
+
+    /// Return a [`Graphemes`] iterator from a [`String`]
+    fn graphemes_iter(&self) -> Graphemes {
+        UnicodeSegmentation::graphemes(self.as_str(), true)
+    }
 }
 
 impl GStringTrait for &str {
@@ -690,6 +706,11 @@ impl GStringTrait for &str {
     /// Create a new [`Vec`] of graphemes from a [`&str`]
     fn graphemes(&self) -> Vec<String> {
         self.gstring().into_graphemes()
+    }
+
+    /// Return a [`Graphemes`] iterator from a [`&str`]
+    fn graphemes_iter(&self) -> Graphemes {
+        UnicodeSegmentation::graphemes(*self, true)
     }
 }
 

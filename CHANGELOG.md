@@ -13,4 +13,5 @@
     * 0.2.2 (2024-12-12): Improve documentation, tests, and trait implementations
     * 0.2.3 (2024-12-12): Improve test for pop method
     * 0.2.4 (2024-12-12): Improve tests
+* 0.3.0 (2024-12-14): Add `graphemes_iter` method to `GStringTrait` and `String`/`&str` implementations
 
