@@ -664,7 +664,7 @@ assert_eq!(s, S);
 let g = a.graphemes();
 assert_eq!(g, G);
 
-// &str => Graphemes
+// String => Graphemes
 let mut g = a.graphemes_iter();
 assert_eq!(g.count(), G.len());
 ```
