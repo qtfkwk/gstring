@@ -15,4 +15,5 @@
     * 0.2.4 (2024-12-12): Improve tests
 * 0.3.0 (2024-12-14): Add `graphemes_iter` method to `GStringTrait` and `String`/`&str` implementations
     * 0.3.1 (2024-12-14): Fix documentation
+* 0.4.0 (2025-01-30): Derive `Default` trait for `GString` and add `GString::new` associated function; implement `PartialEq<str>` for GString; update dependencies
 

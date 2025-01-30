@@ -11,12 +11,27 @@ use std::ops::{RangeFrom, RangeFull, RangeTo};
 //--------------------------------------------------------------------------------------------------
 
 /// String with support for Unicode graphemes
-#[derive(Clone, Serialize)]
+#[derive(Clone, Default, Serialize)]
 pub struct GString {
     data: Vec<String>,
 }
 
 impl GString {
+    /**
+    Create a new empty [`GString`]
+
+    ```
+    use gstring::*;
+
+    let s = GString::new();
+
+    assert_eq!(s, "");
+    ```
+    */
+    pub fn new() -> GString {
+        GString::default()
+    }
+
     /**
     Create a new [`GString`] from a [`&str`]
 
@@ -553,6 +568,24 @@ impl std::cmp::PartialEq<&str> for GString {
     ```
     */
     fn eq(&self, other: &&str) -> bool {
+        self == GString::from(other)
+    }
+}
+
+impl std::cmp::PartialEq<str> for GString {
+    /**
+    Compare a [`GString`] to a [`str`]
+
+    ```
+    use gstring::*;
+
+    let s = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+
+    assert_eq!(s, "a\u{310}e\u{301}o\u{308}\u{332}");
+    assert_ne!(s, "");
+    ```
+    */
+    fn eq(&self, other: &str) -> bool {
         self == GString::from(other)
     }
 }
