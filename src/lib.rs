@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use {
     serde::Serialize,
     std::ops::{Range, RangeBounds},
@@ -185,9 +187,7 @@ impl GString {
     ```
     */
     pub fn insert(&mut self, idx: usize, string: &str) {
-        for i in graphemes(string).into_iter().rev() {
-            self.data.insert(idx, i);
-        }
+        self.data.splice(idx..idx, graphemes(string));
     }
 
     /**
@@ -225,9 +225,7 @@ impl GString {
     ```
     */
     pub fn push(&mut self, string: &str) {
-        for i in graphemes(string) {
-            self.data.push(i);
-        }
+        self.data.append(&mut graphemes(string));
     }
 
     /**
@@ -403,8 +401,9 @@ impl GString {
 
 impl std::fmt::Display for GString {
     /**
-    Print a [`GString`] directly in [`format`], [`write`], etc macros or convert to a [`String`]
-    using the [`to_string`][ToString::to_string] method
+    Print a [`GString`] directly in [`print`], [`println`], [`eprint`], [`eprintln`], and [`write`]
+    macros or convert to a [`String`] using the [`format`] macro [`to_string`][ToString::to_string]
+    method
 
     ```
     use gstring::*;
