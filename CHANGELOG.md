@@ -17,4 +17,5 @@
     * 0.3.1 (2024-12-14): Fix documentation
 * 0.4.0 (2025-01-30): Derive `Default` trait for `GString` and add `GString::new` associated function; implement `PartialEq<str>` for GString; update dependencies
 * 0.5.0 (2025-02-12): Improve `GString::insert` and `GString::push` methods; improve documentation; update dependencies
+    * 0.5.1 (2025-02-21): Update dependencies
 
