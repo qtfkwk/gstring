@@ -91,6 +91,47 @@ impl GString {
     }
 
     /**
+    Returns the index of the first grapheme of this string slice that matches the pattern
+
+    ```
+    use gstring::*;
+
+    let g = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+
+    assert_eq!(g.find(&GString::from("a\u{310}")), Some(0));
+    assert_eq!(g.find(&GString::from("e\u{301}")), Some(1));
+    assert_eq!(g.find(&GString::from("o\u{308}\u{332}")), Some(2));
+    assert!(g.find(&GString::from("nonexistent")).is_none());
+    ```
+    */
+    pub fn find(&self, pattern: &GString) -> Option<usize> {
+        self.data
+            .as_slice()
+            .windows(pattern.len())
+            .enumerate()
+            .find(|(_, g)| g == &pattern.data)
+            .map(|(i, _)| i)
+    }
+
+    /**
+    Returns the index of the first grapheme of this string slice that matches the pattern
+
+    ```
+    use gstring::*;
+
+    let g = GString::from("a\u{310}e\u{301}o\u{308}\u{332}");
+
+    assert_eq!(g.find_str("a\u{310}"), Some(0));
+    assert_eq!(g.find_str("e\u{301}"), Some(1));
+    assert_eq!(g.find_str("o\u{308}\u{332}"), Some(2));
+    assert!(g.find_str("nonexistent").is_none());
+    ```
+    */
+    pub fn find_str(&self, pattern: &str) -> Option<usize> {
+        self.find(&pattern.gstring())
+    }
+
+    /**
     Return a copy of the grapheme at `index`
 
     ```
