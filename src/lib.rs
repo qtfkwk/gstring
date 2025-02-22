@@ -91,6 +91,26 @@ impl GString {
     }
 
     /**
+    Return a copy of the grapheme at `index`
+
+    ```
+    use gstring::*;
+
+    const S: &str = "a\u{310}e\u{301}o\u{308}\u{332}";
+
+    let g = GString::from(S);
+
+    assert_eq!(g.get(0).unwrap(), "a\u{310}");
+    assert_eq!(g.get(1).unwrap(), "e\u{301}");
+    assert_eq!(g.get(2).unwrap(), "o\u{308}\u{332}");
+    assert!(g.get(3).is_none());
+    ```
+    */
+    pub fn get(&self, index: usize) -> Option<String> {
+        (index < self.len()).then(|| self.data[index].clone())
+    }
+
+    /**
     Return the count of graphemes
 
     ```
