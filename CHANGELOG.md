@@ -19,5 +19,6 @@
 * 0.5.0 (2025-02-12): Improve `GString::insert` and `GString::push` methods; improve documentation; update dependencies
     * 0.5.1 (2025-02-21): Update dependencies
 * 0.6.0 (2025-02-22): Add `GString::get` method
-* 0.7.0 (2025-02-22): Add `GString::find` and `GString::find_str` methods
+* 0.7.0 (2025-02-22): Add `GString::find{,_str}` methods
+* 0.8.0 (2025-02-23): Add `GString::{find{,_prev}_from{,_str}` methods; fix changelog
 

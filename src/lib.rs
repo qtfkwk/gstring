@@ -132,6 +132,95 @@ impl GString {
     }
 
     /**
+    Returns the index of the first grapheme of this string slice that matches the pattern after `n`
+    graphemes
+
+    ```
+    use gstring::*;
+
+    let g = GString::from("abc abc");
+
+    assert_eq!(g.find_from(0, &GString::from("abc")), Some(0));
+    assert_eq!(g.find_from(1, &GString::from("abc")), Some(4));
+    assert!(g.find_from(0, &GString::from("nonexistent")).is_none());
+    ```
+    */
+    pub fn find_from(&self, n: usize, pattern: &GString) -> Option<usize> {
+        self.data[n..]
+            .windows(pattern.len())
+            .enumerate()
+            .find(|(_, g)| g == &pattern.data)
+            .map(|(i, _)| i + n)
+    }
+
+    /**
+    Returns the index of the first grapheme of this string slice that matches the pattern after `n`
+    graphemes
+
+    ```
+    use gstring::*;
+
+    let g = GString::from("abc abc");
+
+    assert_eq!(g.find_from_str(0, "abc"), Some(0));
+    assert_eq!(g.find_from_str(1, "abc"), Some(4));
+    assert!(g.find_from_str(0, "nonexistent").is_none());
+    ```
+    */
+    pub fn find_from_str(&self, n: usize, pattern: &str) -> Option<usize> {
+        self.find_from(n, &pattern.gstring())
+    }
+
+    /**
+    Returns the index of the first grapheme of this string slice that matches the pattern before `n`
+    graphemes
+
+    ```
+    use gstring::*;
+
+    let g = GString::from("abc abc");
+
+    assert_eq!(g.find_prev_from(7, &GString::from("abc")), Some(4));
+    assert_eq!(g.find_prev_from(4, &GString::from("abc")), Some(0));
+    assert!(g.find_prev_from(7, &GString::from("nonexistent")).is_none());
+    ```
+    */
+    pub fn find_prev_from(&self, n: usize, pattern: &GString) -> Option<usize> {
+        let mut pattern = pattern.clone().into_graphemes();
+        pattern.reverse();
+
+        let length = self.len();
+        let n = length - n;
+
+        let mut data = self.data.clone();
+        data.reverse();
+
+        data[n..]
+            .windows(pattern.len())
+            .enumerate()
+            .find(|(_, g)| g == &pattern)
+            .map(|(i, _)| length - i - n - pattern.len())
+    }
+
+    /**
+    Returns the index of the first grapheme of this string slice that matches the pattern before `n`
+    graphemes
+
+    ```
+    use gstring::*;
+
+    let g = GString::from("abc abc");
+
+    assert_eq!(g.find_prev_from_str(7, "abc"), Some(4));
+    assert_eq!(g.find_prev_from_str(4, "abc"), Some(0));
+    assert!(g.find_prev_from_str(7, "nonexistent").is_none());
+    ```
+    */
+    pub fn find_prev_from_str(&self, n: usize, pattern: &str) -> Option<usize> {
+        self.find_prev_from(n, &pattern.gstring())
+    }
+
+    /**
     Return a copy of the grapheme at `index`
 
     ```
