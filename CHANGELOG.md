@@ -21,4 +21,5 @@
 * 0.6.0 (2025-02-22): Add `GString::get` method
 * 0.7.0 (2025-02-22): Add `GString::find{,_str}` methods
 * 0.8.0 (2025-02-23): Add `GString::{find{,_prev}_from{,_str}` methods; fix changelog
+* 0.9.0 (2025-03-05): Add `GString::{lines,coordinates,newlines}` methods and `IsNewline` trait and implementation for `str`; update dependencies
 

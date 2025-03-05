@@ -323,6 +323,97 @@ impl GString {
     }
 
     /**
+    Split into lines as a [`Vec`] of [`GString`]s
+
+    ```
+    use gstring::*;
+
+    assert_eq!(GString::from("abc\ndef").lines(), &["abc\n", "def"]);
+    assert_eq!(GString::from("abc\n").lines(), &["abc\n", ""]);
+    assert_eq!(GString::from("\ndef").lines(), &["\n", "def"]);
+    ```
+
+    Note that unlike [`str::lines`], this method includes the original newline graphemes at the end
+    of each line.
+    */
+    pub fn lines(&self) -> Vec<GString> {
+        let mut r = vec![];
+        let mut t = vec![];
+        for g in &self.data {
+            t.push(g.clone());
+            if g.is_newline() {
+                r.push(std::mem::take(&mut t));
+            }
+        }
+        r.push(t);
+        r.into_iter().map(|data| GString { data }).collect()
+    }
+
+    /**
+    Return the coordinates `(row, column)` for a given position
+
+    ```
+    use gstring::*;
+
+    let g = GString::from("abc\ndef");
+
+    assert_eq!(g.coordinates(0), Some((0, 0)));
+    assert_eq!(g.coordinates(1), Some((0, 1)));
+    assert_eq!(g.coordinates(2), Some((0, 2)));
+    assert_eq!(g.coordinates(3), Some((0, 3)));
+    assert_eq!(g.coordinates(4), Some((1, 0)));
+    assert_eq!(g.coordinates(5), Some((1, 1)));
+    assert_eq!(g.coordinates(6), Some((1, 2)));
+    assert_eq!(g.coordinates(7), Some((1, 3)));
+    assert_eq!(g.coordinates(8), None);
+    ```
+
+    Note that newlines are located at the end of each line.
+    Also a valid coordinate exists at a [`GString`]'s position equal to its length, however no valid
+    coordinate exists for any greater position.
+    */
+    pub fn coordinates(&self, position: usize) -> Option<(usize, usize)> {
+        (position <= self.len()).then(|| {
+            let newlines = self.data[..position]
+                .iter()
+                .enumerate()
+                .filter(|(_, g)| g.is_newline())
+                .map(|(i, _)| i)
+                .collect::<Vec<_>>();
+            let row = newlines.len();
+            let column = if row == 0 {
+                position
+            } else {
+                position - newlines.last().unwrap() - 1
+            };
+            (row, column)
+        })
+    }
+
+    /**
+    Return the indices of all newlines
+
+    ```
+    use gstring::*;
+
+    assert_eq!(GString::from("abc\ndef").newlines(), &[3]);
+    assert_eq!(GString::from("abc\ndef\n").newlines(), &[3, 7]);
+    assert_eq!(GString::from("abc").newlines(), &[]);
+    assert_eq!(GString::from("").newlines(), &[]);
+    assert_eq!(GString::from("\n").newlines(), &[0]);
+    assert_eq!(GString::from("\n\n").newlines(), &[0, 1]);
+    ```
+    */
+    pub fn newlines(&self) -> Vec<usize> {
+        self.data
+            .iter()
+            .enumerate()
+            .filter(|(_, g)| g.is_newline())
+            .map(|(i, _)| i)
+            .collect()
+    }
+
+    /**
     Insert a string at an index
 
     ```
@@ -914,4 +1005,19 @@ assert_eq!(g, G);
 */
 pub fn graphemes(s: &str) -> Vec<String> {
     s.graphemes(true).map(String::from).collect()
+}
+
+//--------------------------------------------------------------------------------------------------
+
+/// Trait providing the `is_newline` method
+pub trait IsNewline {
+    /// Returns true if it is a newline grapheme
+    fn is_newline(&self) -> bool;
+}
+
+impl IsNewline for str {
+    /// Implemente the `is_newline` method for [`str`]
+    fn is_newline(&self) -> bool {
+        ["\n", "\r\n"].contains(&self)
+    }
 }
