@@ -1,11 +1,11 @@
 [package]
 name = "gstring"
-version = "0.9.0"
+version = "0.9.1"
 edition = "2021"
 description = "String with support for Unicode graphemes"
 repository = "https://github.com/qtfkwk/gstring"
 license = "MIT"
 
 [dependencies]
-serde = { version = "1.0.218", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive"] }
 unicode-segmentation = "1.12.0"
