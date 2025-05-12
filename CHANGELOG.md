@@ -22,5 +22,6 @@
 * 0.7.0 (2025-02-22): Add `GString::find{,_str}` methods
 * 0.8.0 (2025-02-23): Add `GString::{find{,_prev}_from{,_str}` methods; fix changelog
 * 0.9.0 (2025-03-05): Add `GString::{lines,coordinates,newlines}` methods and `IsNewline` trait and implementation for `str`; update dependencies
-    0.9.1 (2025-04-16): Update dependencies
+    * 0.9.1 (2025-04-16): Update dependencies
+* 0.10.0 (2025-05-12): Add `GString::position` method; track the "shape" in `GString` and add `GString::shape` method; fix `GString.get()` to return a reference instead of a copy; fix `GStringRefIter` to return references instead of copies; fix doc link to `GString::index`; fix `GString::splice` examples; fix changelog; update dependencies
 

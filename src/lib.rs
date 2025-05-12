@@ -2,7 +2,10 @@
 
 use {
     serde::Serialize,
-    std::ops::{Range, RangeBounds},
+    std::{
+        ops::{Index, Range, RangeBounds},
+        slice::SliceIndex,
+    },
     unicode_segmentation::{Graphemes, UnicodeSegmentation},
 };
 
@@ -16,6 +19,7 @@ use std::ops::{RangeFrom, RangeFull, RangeTo};
 #[derive(Clone, Default, Serialize)]
 pub struct GString {
     data: Vec<String>,
+    shape: Vec<usize>,
 }
 
 impl GString {
@@ -48,7 +52,9 @@ impl GString {
     ```
     */
     pub fn from(s: &str) -> GString {
-        GString { data: graphemes(s) }
+        let data = graphemes(s);
+        let shape = calc_shape(&data);
+        GString { data, shape }
     }
 
     /**
@@ -221,7 +227,7 @@ impl GString {
     }
 
     /**
-    Return a copy of the grapheme at `index`
+    Return a reference to the grapheme at `index`
 
     ```
     use gstring::*;
@@ -236,8 +242,8 @@ impl GString {
     assert!(g.get(3).is_none());
     ```
     */
-    pub fn get(&self, index: usize) -> Option<String> {
-        (index < self.len()).then(|| self.data[index].clone())
+    pub fn get(&self, index: usize) -> Option<&String> {
+        (index < self.len()).then(|| &self.data[index])
     }
 
     /**
@@ -337,16 +343,7 @@ impl GString {
     of each line.
     */
     pub fn lines(&self) -> Vec<GString> {
-        let mut r = vec![];
-        let mut t = vec![];
-        for g in &self.data {
-            t.push(g.clone());
-            if g.is_newline() {
-                r.push(std::mem::take(&mut t));
-            }
-        }
-        r.push(t);
-        r.into_iter().map(|data| GString { data }).collect()
+        lines(&self.data)
     }
 
     /**
@@ -374,20 +371,95 @@ impl GString {
     */
     pub fn coordinates(&self, position: usize) -> Option<(usize, usize)> {
         (position <= self.len()).then(|| {
-            let newlines = self.data[..position]
-                .iter()
-                .enumerate()
-                .filter(|(_, g)| g.is_newline())
-                .map(|(i, _)| i)
-                .collect::<Vec<_>>();
-            let row = newlines.len();
+            let n = newline_indices(&self.data[..position]);
+            let row = n.len();
             let column = if row == 0 {
                 position
             } else {
-                position - newlines.last().unwrap() - 1
+                position - n.last().unwrap() - 1
             };
             (row, column)
         })
+    }
+
+    /**
+    Return the position for given coordinates `(row, column)`
+
+    ```
+    use gstring::*;
+
+    /*
+      0 1 2 3   column
+    0 a b c \n
+      0 1 2 3   position
+
+      0 1 2 3   column
+    1 d e f
+      4 5 6 7   position
+    */
+
+    let g = GString::from("abc\ndef");
+
+    assert_eq!(g.position((0, 0)), Some(0));
+    assert_eq!(g.position((0, 1)), Some(1));
+    assert_eq!(g.position((0, 2)), Some(2));
+    assert_eq!(g.position((0, 3)), Some(3));
+    assert_eq!(g.position((0, 4)), None);
+    assert_eq!(g.position((1, 0)), Some(4));
+    assert_eq!(g.position((1, 1)), Some(5));
+    assert_eq!(g.position((1, 2)), Some(6));
+    assert_eq!(g.position((1, 3)), Some(7));
+    assert_eq!(g.position((1, 4)), None);
+    assert_eq!(g.position((2, 0)), None);
+
+    let g = GString::from("");
+
+    assert_eq!(g.position((0, 0)), Some(0));
+    assert_eq!(g.position((0, 1)), None);
+    assert_eq!(g.position((1, 0)), None);
+    ```
+
+    Note that newlines are located at the end of each line.
+    Also a valid coordinate exists at a [`GString`]'s position equal to its length, however no valid
+    coordinate exists for any greater position.
+    */
+    pub fn position(&self, coordinates: (usize, usize)) -> Option<usize> {
+        if self.is_empty() {
+            // Empty, so only valid coordinate is `(0, 0)` and position is `0`
+            (coordinates == (0, 0)).then_some(0)
+        } else {
+            // Not empty...
+            match coordinates {
+                (0, 0) => {
+                    // Shortcut `(0, 0)` to `0`
+                    Some(0)
+                }
+                (row, column) => {
+                    // Not `(0, 0)`...
+                    let newlines = self.newlines();
+                    let last_row = newlines.len();
+                    if row <= last_row {
+                        // Valid row
+                        let lines = self.lines();
+                        let last_column = lines[row].len();
+                        if row == last_row && column == last_column {
+                            // Last row and last column
+                            Some(self.len())
+                        } else if column < last_column {
+                            // Valid column
+                            // Sum lengths of prior lines and add the column
+                            Some(lines[..row].iter().map(|line| line.len()).sum::<usize>() + column)
+                        } else {
+                            // Invalid column
+                            None
+                        }
+                    } else {
+                        // Invalid row
+                        None
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -405,12 +477,7 @@ impl GString {
     ```
     */
     pub fn newlines(&self) -> Vec<usize> {
-        self.data
-            .iter()
-            .enumerate()
-            .filter(|(_, g)| g.is_newline())
-            .map(|(i, _)| i)
-            .collect()
+        newline_indices(&self.data)
     }
 
     /**
@@ -427,8 +494,8 @@ impl GString {
     assert_eq!(s, S);
     ```
     */
-    pub fn insert(&mut self, idx: usize, string: &str) {
-        self.data.splice(idx..idx, graphemes(string));
+    pub fn insert(&mut self, index: usize, string: &str) {
+        self.splice(index..index, string);
     }
 
     /**
@@ -445,10 +512,10 @@ impl GString {
     assert_eq!(s, "a\u{310}o\u{308}\u{332}");
     ```
     */
-    pub fn remove(&mut self, idx: usize) -> GString {
-        GString {
-            data: vec![self.data.remove(idx)],
-        }
+    pub fn remove(&mut self, index: usize) -> GString {
+        let r = GString::from(&self.data.remove(index));
+        self.shape = calc_shape(&self.data);
+        r
     }
 
     /**
@@ -467,6 +534,7 @@ impl GString {
     */
     pub fn push(&mut self, string: &str) {
         self.data.append(&mut graphemes(string));
+        self.shape = calc_shape(&self.data);
     }
 
     /**
@@ -493,7 +561,10 @@ impl GString {
     ```
     */
     pub fn pop(&mut self) -> Option<GString> {
-        self.data.pop().map(|x| GString { data: vec![x] })
+        self.data.pop().map(|g| {
+            self.shape = calc_shape(&self.data);
+            GString::from(&g)
+        })
     }
 
     /**
@@ -509,23 +580,27 @@ impl GString {
 
     let mut s = GString::from(S);
 
-    s.splice(0..2, "e\u{301}a\u{310}");
+    assert_eq!(s.splice(0..2, "e\u{301}a\u{310}"), "a\u{310}e\u{301}");
     assert_eq!(s, "e\u{301}a\u{310}o\u{308}\u{332}");
 
-    s.splice(1.., "o\u{308}\u{332}a\u{310}");
+    assert_eq!(s.splice(1.., "o\u{308}\u{332}a\u{310}"), "a\u{310}o\u{308}\u{332}");
     assert_eq!(s, "e\u{301}o\u{308}\u{332}a\u{310}");
 
-    s.splice(..1, "");
+    assert_eq!(s.splice(..1, ""), "e\u{301}");
     assert_eq!(s, "o\u{308}\u{332}a\u{310}");
 
-    s.splice(.., "");
+    assert_eq!(s.splice(.., ""), "o\u{308}\u{332}a\u{310}");
     assert_eq!(s, "");
     ```
     */
     pub fn splice<R: RangeBounds<usize>>(&mut self, range: R, replace_with: &str) -> GString {
-        GString {
-            data: self.data.splice(range, graphemes(replace_with)).collect(),
-        }
+        let data = self
+            .data
+            .splice(range, graphemes(replace_with))
+            .collect::<Vec<_>>();
+        let shape = calc_shape(&data);
+        self.shape = calc_shape(&self.data);
+        GString { data, shape }
     }
 
     /**
@@ -553,9 +628,10 @@ impl GString {
     ```
     */
     pub fn drain<R: RangeBounds<usize>>(&mut self, range: R) -> GString {
-        GString {
-            data: self.data.drain(range).collect(),
-        }
+        let data = self.data.drain(range).collect::<Vec<_>>();
+        let shape = calc_shape(&data);
+        self.shape = calc_shape(&self.data);
+        GString { data, shape }
     }
 
     /**
@@ -576,12 +652,47 @@ impl GString {
     assert_eq!(s.slice(0..3), S);
     ```
 
-    See also the `GString::index` method.
+    See also the [`GString::index`] method.
     */
     pub fn slice(&self, range: Range<usize>) -> GString {
-        GString {
-            data: self.data[range].to_vec(),
-        }
+        let data = self.data[range].to_vec();
+        let shape = calc_shape(&data);
+        GString { data, shape }
+    }
+
+    /**
+    Return a reference to the "shape" of the content
+
+    - Length of the shape: Number of lines
+    - Values: Maximum column index for each line (including the newline)
+
+    | Line    | Count | Row Index | Max Column Index |
+    |---------|------:|----------:|-----------------:|
+    | `\n`    |     1 |         0 |                0 |
+    | `a\n`   |     2 |         1 |                1 |
+    | `bc\n`  |     3 |         2 |                2 |
+    | `d\n`   |     4 |         3 |                1 |
+    | `efg\n` |     5 |         4 |                3 |
+    | `\n`    |     6 |         5 |                0 |
+
+    ```
+    use gstring::*;
+
+    let s = GString::from("\na\nbc\nd\nefg\n");
+
+    let shape = s.shape();
+
+    assert_eq!(shape, &[0, 1, 2, 1, 3, 0]);
+
+    // There are 6 lines
+    assert_eq!(shape.len(), 6);
+
+    // Max column index of the 5th line is 3
+    assert_eq!(shape[4], 3);
+    ```
+    */
+    pub fn shape(&self) -> &[usize] {
+        &self.shape
     }
 
     /**
@@ -606,7 +717,7 @@ impl GString {
     pub fn iter(&self) -> GStringRefIter {
         GStringRefIter {
             gstring: self,
-            idx: 0,
+            index: 0,
         }
     }
 
@@ -633,12 +744,13 @@ impl GString {
     pub fn into_iter(self) -> GStringIter {
         GStringIter {
             gstring: self,
-            idx: 0,
+            index: 0,
         }
     }
 }
 
 //--------------------------------------------------------------------------------------------------
+// Implementations
 
 impl std::fmt::Display for GString {
     /**
@@ -684,9 +796,9 @@ impl std::fmt::Debug for GString {
     }
 }
 
-impl<I> std::ops::Index<I> for GString
+impl<I> Index<I> for GString
 where
-    I: std::slice::SliceIndex<[String]>,
+    I: SliceIndex<[String]>,
 {
     type Output = I::Output;
 
@@ -835,11 +947,11 @@ impl std::cmp::PartialEq<str> for GString {
 /// Created by [`GString::iter`] to iterate graphemes by reference
 pub struct GStringRefIter<'a> {
     gstring: &'a GString,
-    idx: usize,
+    index: usize,
 }
 
-impl Iterator for GStringRefIter<'_> {
-    type Item = String;
+impl<'a> Iterator for GStringRefIter<'a> {
+    type Item = &'a String;
 
     /**
     Get the next grapheme by reference
@@ -859,8 +971,8 @@ impl Iterator for GStringRefIter<'_> {
     ```
     */
     fn next(&mut self) -> Option<Self::Item> {
-        let r = self.gstring.data.get(self.idx).cloned();
-        self.idx += 1;
+        let r = self.gstring.data.get(self.index);
+        self.index += 1;
         r
     }
 }
@@ -870,7 +982,7 @@ impl Iterator for GStringRefIter<'_> {
 /// Created by [`GString::into_iter`] to iterate graphemes
 pub struct GStringIter {
     gstring: GString,
-    idx: usize,
+    index: usize,
 }
 
 impl Iterator for GStringIter {
@@ -893,13 +1005,14 @@ impl Iterator for GStringIter {
     ```
     */
     fn next(&mut self) -> Option<Self::Item> {
-        let r = self.gstring.data.get(self.idx).cloned();
-        self.idx += 1;
+        let r = self.gstring.data.get(self.index).cloned();
+        self.index += 1;
         r
     }
 }
 
 //--------------------------------------------------------------------------------------------------
+// Traits
 
 /**
 Trait for easy conversion to [`GString`], [`Vec`] of graphemes, or [`Graphemes`] iterator from
@@ -989,6 +1102,22 @@ impl GStringTrait for &str {
 
 //--------------------------------------------------------------------------------------------------
 
+/// Trait providing the `is_newline` method
+pub trait IsNewline {
+    /// Returns true if it is a newline grapheme
+    fn is_newline(&self) -> bool;
+}
+
+impl IsNewline for str {
+    /// Implemente the `is_newline` method for [`str`]
+    fn is_newline(&self) -> bool {
+        ["\n", "\r\n"].contains(&self)
+    }
+}
+
+//--------------------------------------------------------------------------------------------------
+// Functions
+
 /**
 Create a [`Vec`] of graphemes from a [`&str`]
 
@@ -1008,16 +1137,40 @@ pub fn graphemes(s: &str) -> Vec<String> {
 }
 
 //--------------------------------------------------------------------------------------------------
+// Helper functions
 
-/// Trait providing the `is_newline` method
-pub trait IsNewline {
-    /// Returns true if it is a newline grapheme
-    fn is_newline(&self) -> bool;
+/// Return the indices of all newline graphemes
+fn newline_indices(data: &[String]) -> Vec<usize> {
+    data.iter()
+        .enumerate()
+        .filter(|(_, g)| g.is_newline())
+        .map(|(i, _)| i)
+        .collect()
 }
 
-impl IsNewline for str {
-    /// Implemente the `is_newline` method for [`str`]
-    fn is_newline(&self) -> bool {
-        ["\n", "\r\n"].contains(&self)
+/// Calculate the "shape" of the [`GString`] content
+fn calc_shape(data: &[String]) -> Vec<usize> {
+    lines(data)
+        .iter()
+        .map(|line| line.len().saturating_sub(1))
+        .collect()
+}
+
+/// Split graphemes into lines as a [`Vec`] of [`GString`]s
+fn lines(data: &[String]) -> Vec<GString> {
+    let mut r = vec![];
+    let mut t = vec![];
+    for g in data {
+        t.push(g.clone());
+        if g.is_newline() {
+            r.push(std::mem::take(&mut t));
+        }
     }
+    r.push(t);
+    r.into_iter()
+        .map(|data| {
+            let shape = vec![data.len().saturating_sub(1)];
+            GString { data, shape }
+        })
+        .collect()
 }

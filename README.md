@@ -34,7 +34,7 @@ assert_eq!(s, "i\u{301}a\u{310}e\u{301}o\u{308}\u{332}i\u{301}");
 assert_eq!(s.slice(1..4), "a\u{310}e\u{301}o\u{308}\u{332}");
 
 // Splice
-s.splice(1..4, "");
+assert_eq!(s.splice(1..4, ""), "a\u{310}e\u{301}o\u{308}\u{332}");
 assert_eq!(s, "i\u{301}i\u{301}");
 
 // Drain
