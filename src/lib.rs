@@ -368,6 +368,8 @@ impl GString {
     Note that newlines are located at the end of each line.
     Also a valid coordinate exists at a [`GString`]'s position equal to its length, however no valid
     coordinate exists for any greater position.
+
+    See also the [`GString::position`] method.
     */
     pub fn coordinates(&self, position: usize) -> Option<(usize, usize)> {
         (position <= self.len()).then(|| {
@@ -422,6 +424,8 @@ impl GString {
     Note that newlines are located at the end of each line.
     Also a valid coordinate exists at a [`GString`]'s position equal to its length, however no valid
     coordinate exists for any greater position.
+
+    See also the [`GString::coordinates`] method.
     */
     pub fn position(&self, coordinates: (usize, usize)) -> Option<usize> {
         if self.is_empty() {
