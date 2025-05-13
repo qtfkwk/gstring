@@ -3,6 +3,7 @@
 use {
     serde::Serialize,
     std::{
+        fmt::Write,
         ops::{Index, Range, RangeBounds},
         slice::SliceIndex,
     },
@@ -700,6 +701,131 @@ impl GString {
     }
 
     /**
+    Generate string showing the row, column, and position for each grapheme
+
+    ```
+    use gstring::*;
+
+    let s = GString::from("a\nbc\ndef\nghij");
+
+    let d = "  \
+      0 1 2 3 4
+
+      0 1
+    0 a \\n
+      0 1
+
+      0 1 2
+    1 b c \\n
+      2 3 4
+
+      0 1 2 3
+    2 d e f \\n
+      5 6 7 8
+
+      0 1 2 3 4
+    3 g h i j
+      0 1 1 1 1
+      9 0 1 2 3
+
+    ";
+
+    assert_eq!(s.shape_string(), d);
+    ```
+
+    # Notes
+
+    1. There is a column header at the top to show the column header for the longest row.
+    2. Each content row has:
+        - Row column header above
+        - Row index to the left
+        - Position (offset) below
+    3. The last row shows the column and position one grapheme past the end.
+    */
+    pub fn shape_string(&self) -> String {
+        let mut r = String::new();
+
+        // Column header at top
+        let max_column = *self
+            .shape
+            .iter()
+            .max()
+            .unwrap()
+            .max(&(*self.shape.last().unwrap() + 1));
+        let last_row = self.shape.len() - 1;
+        let row_width = n_digits(last_row);
+        let row_space = " ".repeat(row_width);
+        let e = n_digits(max_column);
+        for n in 0..e {
+            writeln!(
+                r,
+                "{row_space} {}",
+                (0..=max_column)
+                    .map(|x| { format!("{x:00$}", e).chars().nth(n).unwrap().to_string() })
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            )
+            .unwrap();
+        }
+        writeln!(r).unwrap();
+
+        // Content rows
+        let mut position = 0;
+        for (row, line) in self.lines().iter().enumerate() {
+            // Row column header above
+            let max_column = self.shape[row] + if row == last_row { 1 } else { 0 };
+            let e = n_digits(max_column + 1);
+            for n in 0..e {
+                writeln!(
+                    r,
+                    "{row_space} {}",
+                    (0..=max_column)
+                        .map(|x| { format!("{x:00$}", e).chars().nth(n).unwrap().to_string() })
+                        .collect::<Vec<_>>()
+                        .join(" "),
+                )
+                .unwrap();
+            }
+
+            // Content row
+            writeln!(
+                r,
+                "{row:01$} {}",
+                line.iter()
+                    .map(|g| match g.as_str() {
+                        "\n" => "\\n",
+                        "\r\n" => "\\r\\n",
+                        _ => g.as_str(),
+                    })
+                    .collect::<Vec<_>>()
+                    .join(" "),
+                row_width,
+            )
+            .unwrap();
+
+            // Position (offset) below
+            let a = position;
+            let b = position + max_column;
+            let e = n_digits(b + 1);
+            for n in 0..e {
+                writeln!(
+                    r,
+                    "{row_space} {}",
+                    (a..=b)
+                        .map(|x| { format!("{x:00$}", e).chars().nth(n).unwrap().to_string() })
+                        .collect::<Vec<_>>()
+                        .join(" "),
+                )
+                .unwrap();
+            }
+            writeln!(r).unwrap();
+
+            position += self.shape[row] + 1;
+        }
+        r
+    }
+
+    /**
     Create a [`GStringRefIter`] for iterating graphemes by reference
 
     ```
@@ -1177,4 +1303,9 @@ fn lines(data: &[String]) -> Vec<GString> {
             GString { data, shape }
         })
         .collect()
+}
+
+/// Find the number of base 10 digits in a number
+fn n_digits(number: usize) -> usize {
+    (number as f64).log10().ceil() as usize
 }

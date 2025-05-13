@@ -25,4 +25,5 @@
     * 0.9.1 (2025-04-16): Update dependencies
 * 0.10.0 (2025-05-12): Add `GString::position` method; track the "shape" in `GString` and add `GString::shape` method; fix `GString.get()` to return a reference instead of a copy; fix `GStringRefIter` to return references instead of copies; fix doc link to `GString::index`; fix `GString::splice` examples; fix changelog; update dependencies
     * 0.10.1 (2025-05-12): Add doc links between `GString::{coordinates,position}` methods
+* 0.11.0 (2025-05-13): Add `GString::shape_string` method; add `serve-doc` target to makefile
 
