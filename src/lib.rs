@@ -844,7 +844,7 @@ impl GString {
 
     See also the [`GString::into_iter`] method.
     */
-    pub fn iter(&self) -> GStringRefIter {
+    pub fn iter(&self) -> GStringRefIter<'_> {
         GStringRefIter {
             gstring: self,
             index: 0,
@@ -1193,7 +1193,7 @@ pub trait GStringTrait {
     fn graphemes(&self) -> Vec<String>;
 
     /// Return a [`Graphemes`] iterator
-    fn graphemes_iter(&self) -> Graphemes;
+    fn graphemes_iter(&self) -> Graphemes<'_>;
 }
 
 impl GStringTrait for String {
@@ -1208,7 +1208,7 @@ impl GStringTrait for String {
     }
 
     /// Return a [`Graphemes`] iterator from a [`String`]
-    fn graphemes_iter(&self) -> Graphemes {
+    fn graphemes_iter(&self) -> Graphemes<'_> {
         UnicodeSegmentation::graphemes(self.as_str(), true)
     }
 }
@@ -1225,7 +1225,7 @@ impl GStringTrait for &str {
     }
 
     /// Return a [`Graphemes`] iterator from a [`&str`]
-    fn graphemes_iter(&self) -> Graphemes {
+    fn graphemes_iter(&self) -> Graphemes<'_> {
         UnicodeSegmentation::graphemes(*self, true)
     }
 }
