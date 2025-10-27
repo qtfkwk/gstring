@@ -27,4 +27,5 @@
     * 0.10.1 (2025-05-12): Add doc links between `GString::{coordinates,position}` methods
 * 0.11.0 (2025-05-13): Add `GString::shape_string` method; add `serve-doc` target to makefile
 * 0.12.0 (2025-09-02): Update dependencies; 2024 edition
+* 0.13.0 (2025-10-27): Add `Grapheme` as a better abstraction than `String`; update dependencies
 

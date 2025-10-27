@@ -27,7 +27,7 @@ s.push("i\u{301}u\u{301}");
 assert_eq!(s, "i\u{301}a\u{310}e\u{301}o\u{308}\u{332}i\u{301}u\u{301}");
 
 // Pop last grapheme
-assert_eq!(s.pop(), Some("u\u{301}".gstring()));
+assert_eq!(s.pop().unwrap(), "u\u{301}");
 assert_eq!(s, "i\u{301}a\u{310}e\u{301}o\u{308}\u{332}i\u{301}");
 
 // Slice

@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 use {
+    anyhow::{Result, anyhow},
     serde::Serialize,
     std::{
         fmt::Write,
@@ -10,16 +11,182 @@ use {
     unicode_segmentation::{Graphemes, UnicodeSegmentation},
 };
 
-#[allow(unused_imports)]
-use std::ops::{RangeFrom, RangeFull, RangeTo};
-// NOTE: These are included for links in the documentation.
+//--------------------------------------------------------------------------------------------------
+
+#[derive(Clone, Default, PartialEq, Serialize)]
+pub struct Grapheme {
+    data: String,
+}
+
+impl Grapheme {
+    /**
+    Create a new [`Grapheme`] from a [`&str`]
+
+    ```
+    use gstring::*;
+
+    const S: &str = "a\u{310}";
+
+    let g = Grapheme::from(S).unwrap();
+
+    assert_eq!(g, S);
+    ```
+    */
+    pub fn from(s: &str) -> Result<Grapheme> {
+        let mut g = graphemes(s);
+        match g.len() {
+            1 => Ok(g.remove(0)),
+            _ => Err(anyhow!("Input must contain 1 grapheme")),
+        }
+    }
+
+    /**
+    Return a [`Vec`] of [`char`]s
+
+    ```
+    use gstring::*;
+
+    const S: &str = "a\u{310}";
+    const C: &[char] = &['a', '\u{310}'];
+
+    let c = Grapheme::from(S).unwrap().chars();
+
+    assert_eq!(c, C);
+    assert_eq!(c.len(), C.len());
+    ```
+    */
+    pub fn chars(&self) -> Vec<char> {
+        self.data.chars().collect()
+    }
+
+    /**
+    Return a [`Vec`] of [`u8`]s
+
+    ```
+    use gstring::*;
+
+    const S: &str = "a\u{310}";
+    const B: &[u8] = &[0x61, 0xcc, 0x90];
+
+    let b = Grapheme::from(S).unwrap().bytes();
+
+    assert_eq!(b, B);
+    assert_eq!(b.len(), B.len());
+    ```
+    */
+    pub fn bytes(&self) -> Vec<u8> {
+        self.data.bytes().collect()
+    }
+
+    /**
+    Return a reference to the internal string
+    ```
+    use gstring::*;
+
+    const S: &str = "a\u{310}";
+
+    let g = Grapheme::from(S).unwrap();
+
+    assert_eq!(g.as_str(), S);
+    ```
+    */
+    pub fn as_str(&self) -> &str {
+        &self.data
+    }
+}
+
+impl std::fmt::Display for Grapheme {
+    /**
+    Print a [`Grapheme`] directly in [`print`], [`println`], [`eprint`], [`eprintln`], and [`write`]
+    macros or convert to a [`String`] using the [`format`] macro [`to_string`][ToString::to_string]
+    method
+
+    ```
+    use gstring::*;
+
+    const S: &str = "a\u{310}";
+
+    let g = Grapheme::from(S).unwrap();
+
+    assert_eq!(format!("{g}"), S);
+    assert_eq!(format!("{}", g), S);
+    assert_eq!(g.to_string(), S);
+    ```
+    */
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        self.data.fmt(f)
+    }
+}
+
+impl std::fmt::Debug for Grapheme {
+    /**
+    Debug print a [`Grapheme`] in [`format`], [`print`], [`println`], [`write`], [`writeln`], etc
+    macros
+
+    ```
+    use gstring::*;
+
+    const S: &str = "a\u{310}";
+
+    let s = GString::from(S);
+
+    assert_eq!(
+        format!("{:?}", s[0]),
+        format!("{:?}", S),
+    );
+    ```
+    */
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self.data)
+    }
+}
+
+impl std::cmp::PartialEq<&str> for Grapheme {
+    /**
+    Compare a [`Grapheme`] to a [`&str`]
+
+    ```
+    use gstring::*;
+
+    const S: &str = "a\u{310}";
+
+    let s = Grapheme::from(S).unwrap();
+
+    assert_eq!(s, S);
+    assert_ne!(s, "");
+    ```
+    */
+    fn eq(&self, other: &&str) -> bool {
+        self.data == *other
+    }
+}
+
+impl std::cmp::PartialEq<str> for Grapheme {
+    /**
+    Compare a [`Grapheme`] to a [`str`]
+
+    ```
+    use gstring::*;
+
+    const S: &str = "a\u{310}";
+
+    let s = Grapheme::from(S).unwrap();
+
+    assert_eq!(s, S);
+    assert_ne!(s, "");
+    ```
+    */
+    fn eq(&self, other: &str) -> bool {
+        self.data == other
+    }
+}
 
 //--------------------------------------------------------------------------------------------------
 
 /// String with support for Unicode graphemes
 #[derive(Clone, Default, Serialize)]
 pub struct GString {
-    data: Vec<String>,
+    data: Vec<Grapheme>,
     shape: Vec<usize>,
 }
 
@@ -74,7 +241,7 @@ impl GString {
     assert_eq!(g.len(), G.len());
     ```
     */
-    pub fn graphemes(&self) -> &[String] {
+    pub fn graphemes(&self) -> &[Grapheme] {
         &self.data
     }
 
@@ -93,7 +260,7 @@ impl GString {
     assert_eq!(g.len(), G.len());
     ```
     */
-    pub fn into_graphemes(self) -> Vec<String> {
+    pub fn into_graphemes(self) -> Vec<Grapheme> {
         self.data
     }
 
@@ -243,7 +410,7 @@ impl GString {
     assert!(g.get(3).is_none());
     ```
     */
-    pub fn get(&self, index: usize) -> Option<&String> {
+    pub fn get(&self, index: usize) -> Option<&Grapheme> {
         (index < self.len()).then(|| &self.data[index])
     }
 
@@ -301,10 +468,7 @@ impl GString {
     ```
     */
     pub fn chars(&self) -> Vec<char> {
-        self.data
-            .iter()
-            .flat_map(|x| x.chars().collect::<Vec<_>>())
-            .collect()
+        self.data.iter().flat_map(|x| x.chars()).collect()
     }
 
     /**
@@ -323,10 +487,7 @@ impl GString {
     ```
     */
     pub fn bytes(&self) -> Vec<u8> {
-        self.data
-            .iter()
-            .flat_map(|x| x.bytes().collect::<Vec<_>>())
-            .collect()
+        self.data.iter().flat_map(|x| x.bytes()).collect()
     }
 
     /**
@@ -517,8 +678,8 @@ impl GString {
     assert_eq!(s, "a\u{310}o\u{308}\u{332}");
     ```
     */
-    pub fn remove(&mut self, index: usize) -> GString {
-        let r = GString::from(&self.data.remove(index));
+    pub fn remove(&mut self, index: usize) -> Grapheme {
+        let r = self.data.remove(index);
         self.shape = calc_shape(&self.data);
         r
     }
@@ -565,11 +726,8 @@ impl GString {
     assert_eq!(s, "");
     ```
     */
-    pub fn pop(&mut self) -> Option<GString> {
-        self.data.pop().map(|g| {
-            self.shape = calc_shape(&self.data);
-            GString::from(&g)
-        })
+    pub fn pop(&mut self) -> Option<Grapheme> {
+        self.data.pop()
     }
 
     /**
@@ -597,6 +755,12 @@ impl GString {
     assert_eq!(s.splice(.., ""), "o\u{308}\u{332}a\u{310}");
     assert_eq!(s, "");
     ```
+
+    [`RangeFrom<usize>`]: std::ops::RangeFrom
+
+    [`RangeTo<usize>`]: std::ops::RangeTo
+
+    [`RangeFull`]: std::ops::RangeFull
     */
     pub fn splice<R: RangeBounds<usize>>(&mut self, range: R, replace_with: &str) -> GString {
         let data = self
@@ -631,6 +795,12 @@ impl GString {
     assert_eq!(s.drain(..), "a\u{310}");
     assert_eq!(s, "");
     ```
+
+    [`RangeFrom<usize>`]: std::ops::RangeFrom
+
+    [`RangeTo<usize>`]: std::ops::RangeTo
+
+    [`RangeFull`]: std::ops::RangeFull
     */
     pub fn drain<R: RangeBounds<usize>>(&mut self, range: R) -> GString {
         let data = self.data.drain(range).collect::<Vec<_>>();
@@ -901,7 +1071,10 @@ impl std::fmt::Display for GString {
     ```
     */
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.data.join(""))
+        for g in self.data.iter() {
+            write!(f, "{g}")?;
+        }
+        Ok(())
     }
 }
 
@@ -928,7 +1101,7 @@ impl std::fmt::Debug for GString {
 
 impl<I> Index<I> for GString
 where
-    I: SliceIndex<[String]>,
+    I: SliceIndex<[Grapheme]>,
 {
     type Output = I::Output;
 
@@ -961,6 +1134,12 @@ where
     ```
 
     See also the [`GString::slice`] method.
+
+    [`RangeFrom<usize>`]: std::ops::RangeFrom
+
+    [`RangeTo<usize>`]: std::ops::RangeTo
+
+    [`RangeFull`]: std::ops::RangeFull
     */
     fn index(&self, index: I) -> &Self::Output {
         &self.data[index]
@@ -1081,7 +1260,7 @@ pub struct GStringRefIter<'a> {
 }
 
 impl<'a> Iterator for GStringRefIter<'a> {
-    type Item = &'a String;
+    type Item = &'a Grapheme;
 
     /**
     Get the next grapheme by reference
@@ -1116,7 +1295,7 @@ pub struct GStringIter {
 }
 
 impl Iterator for GStringIter {
-    type Item = String;
+    type Item = Grapheme;
 
     /**
     Get the next grapheme
@@ -1190,7 +1369,7 @@ pub trait GStringTrait {
     fn gstring(&self) -> GString;
 
     /// Create a new [`Vec`] of graphemes
-    fn graphemes(&self) -> Vec<String>;
+    fn graphemes(&self) -> Vec<Grapheme>;
 
     /// Return a [`Graphemes`] iterator
     fn graphemes_iter(&self) -> Graphemes<'_>;
@@ -1203,7 +1382,7 @@ impl GStringTrait for String {
     }
 
     /// Create a new [`Vec`] of graphemes from a [`String`]
-    fn graphemes(&self) -> Vec<String> {
+    fn graphemes(&self) -> Vec<Grapheme> {
         self.gstring().into_graphemes()
     }
 
@@ -1220,8 +1399,8 @@ impl GStringTrait for &str {
     }
 
     /// Create a new [`Vec`] of graphemes from a [`&str`]
-    fn graphemes(&self) -> Vec<String> {
-        self.gstring().into_graphemes()
+    fn graphemes(&self) -> Vec<Grapheme> {
+        graphemes(self)
     }
 
     /// Return a [`Graphemes`] iterator from a [`&str`]
@@ -1245,6 +1424,13 @@ impl IsNewline for str {
     }
 }
 
+impl IsNewline for Grapheme {
+    /// Implemente the `is_newline` method for [`Grapheme`]
+    fn is_newline(&self) -> bool {
+        self.data.is_newline()
+    }
+}
+
 //--------------------------------------------------------------------------------------------------
 // Functions
 
@@ -1262,15 +1448,19 @@ let g = graphemes(S);
 assert_eq!(g, G);
 ```
 */
-pub fn graphemes(s: &str) -> Vec<String> {
-    s.graphemes(true).map(String::from).collect()
+pub fn graphemes(s: &str) -> Vec<Grapheme> {
+    s.graphemes(true)
+        .map(|g| Grapheme {
+            data: g.to_string(),
+        })
+        .collect()
 }
 
 //--------------------------------------------------------------------------------------------------
 // Helper functions
 
 /// Return the indices of all newline graphemes
-fn newline_indices(data: &[String]) -> Vec<usize> {
+fn newline_indices(data: &[Grapheme]) -> Vec<usize> {
     data.iter()
         .enumerate()
         .filter(|(_, g)| g.is_newline())
@@ -1279,7 +1469,7 @@ fn newline_indices(data: &[String]) -> Vec<usize> {
 }
 
 /// Calculate the "shape" of the [`GString`] content
-fn calc_shape(data: &[String]) -> Vec<usize> {
+fn calc_shape(data: &[Grapheme]) -> Vec<usize> {
     lines(data)
         .iter()
         .map(|line| line.len().saturating_sub(1))
@@ -1287,7 +1477,7 @@ fn calc_shape(data: &[String]) -> Vec<usize> {
 }
 
 /// Split graphemes into lines as a [`Vec`] of [`GString`]s
-fn lines(data: &[String]) -> Vec<GString> {
+fn lines(data: &[Grapheme]) -> Vec<GString> {
     let mut r = vec![];
     let mut t = vec![];
     for g in data {
