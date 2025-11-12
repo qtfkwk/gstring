@@ -31,6 +31,10 @@ impl Grapheme {
 
     assert_eq!(g, S);
     ```
+
+    # Errors
+
+    Returns an error if the given `&str` does not contain exactly 1 grapheme
     */
     pub fn from(s: &str) -> Result<Grapheme> {
         let mut g = graphemes(s);
@@ -55,6 +59,7 @@ impl Grapheme {
     assert_eq!(c.len(), C.len());
     ```
     */
+    #[must_use]
     pub fn chars(&self) -> Vec<char> {
         self.data.chars().collect()
     }
@@ -74,6 +79,7 @@ impl Grapheme {
     assert_eq!(b.len(), B.len());
     ```
     */
+    #[must_use]
     pub fn bytes(&self) -> Vec<u8> {
         self.data.bytes().collect()
     }
@@ -90,6 +96,7 @@ impl Grapheme {
     assert_eq!(g.as_str(), S);
     ```
     */
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.data
     }
@@ -202,6 +209,7 @@ impl GString {
     assert_eq!(s, "");
     ```
     */
+    #[must_use]
     pub fn new() -> GString {
         GString::default()
     }
@@ -219,6 +227,7 @@ impl GString {
     assert_eq!(s, S);
     ```
     */
+    #[must_use]
     pub fn from(s: &str) -> GString {
         let data = graphemes(s);
         let shape = calc_shape(&data);
@@ -241,6 +250,7 @@ impl GString {
     assert_eq!(g.len(), G.len());
     ```
     */
+    #[must_use]
     pub fn graphemes(&self) -> &[Grapheme] {
         &self.data
     }
@@ -260,6 +270,7 @@ impl GString {
     assert_eq!(g.len(), G.len());
     ```
     */
+    #[must_use]
     pub fn into_graphemes(self) -> Vec<Grapheme> {
         self.data
     }
@@ -278,6 +289,7 @@ impl GString {
     assert!(g.find(&GString::from("nonexistent")).is_none());
     ```
     */
+    #[must_use]
     pub fn find(&self, pattern: &GString) -> Option<usize> {
         self.data
             .as_slice()
@@ -301,6 +313,7 @@ impl GString {
     assert!(g.find_str("nonexistent").is_none());
     ```
     */
+    #[must_use]
     pub fn find_str(&self, pattern: &str) -> Option<usize> {
         self.find(&pattern.gstring())
     }
@@ -319,6 +332,7 @@ impl GString {
     assert!(g.find_from(0, &GString::from("nonexistent")).is_none());
     ```
     */
+    #[must_use]
     pub fn find_from(&self, n: usize, pattern: &GString) -> Option<usize> {
         self.data[n..]
             .windows(pattern.len())
@@ -341,6 +355,7 @@ impl GString {
     assert!(g.find_from_str(0, "nonexistent").is_none());
     ```
     */
+    #[must_use]
     pub fn find_from_str(&self, n: usize, pattern: &str) -> Option<usize> {
         self.find_from(n, &pattern.gstring())
     }
@@ -359,6 +374,7 @@ impl GString {
     assert!(g.find_prev_from(7, &GString::from("nonexistent")).is_none());
     ```
     */
+    #[must_use]
     pub fn find_prev_from(&self, n: usize, pattern: &GString) -> Option<usize> {
         let mut pattern = pattern.clone().into_graphemes();
         pattern.reverse();
@@ -390,6 +406,7 @@ impl GString {
     assert!(g.find_prev_from_str(7, "nonexistent").is_none());
     ```
     */
+    #[must_use]
     pub fn find_prev_from_str(&self, n: usize, pattern: &str) -> Option<usize> {
         self.find_prev_from(n, &pattern.gstring())
     }
@@ -410,6 +427,7 @@ impl GString {
     assert!(g.get(3).is_none());
     ```
     */
+    #[must_use]
     pub fn get(&self, index: usize) -> Option<&Grapheme> {
         (index < self.len()).then(|| &self.data[index])
     }
@@ -429,6 +447,7 @@ impl GString {
     assert_eq!(s.len(), 0);
     ```
     */
+    #[must_use]
     pub fn len(&self) -> usize {
         self.data.len()
     }
@@ -448,6 +467,7 @@ impl GString {
     assert!(!s.is_empty());
     ```
     */
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
@@ -467,8 +487,9 @@ impl GString {
     assert_eq!(c.len(), C.len());
     ```
     */
+    #[must_use]
     pub fn chars(&self) -> Vec<char> {
-        self.data.iter().flat_map(|x| x.chars()).collect()
+        self.data.iter().flat_map(Grapheme::chars).collect()
     }
 
     /**
@@ -486,8 +507,9 @@ impl GString {
     assert_eq!(b.len(), B.len());
     ```
     */
+    #[must_use]
     pub fn bytes(&self) -> Vec<u8> {
-        self.data.iter().flat_map(|x| x.bytes()).collect()
+        self.data.iter().flat_map(Grapheme::bytes).collect()
     }
 
     /**
@@ -504,6 +526,7 @@ impl GString {
     Note that unlike [`str::lines`], this method includes the original newline graphemes at the end
     of each line.
     */
+    #[must_use]
     pub fn lines(&self) -> Vec<GString> {
         lines(&self.data)
     }
@@ -533,6 +556,8 @@ impl GString {
 
     See also the [`GString::position`] method.
     */
+    #[allow(clippy::missing_panics_doc)]
+    #[must_use]
     pub fn coordinates(&self, position: usize) -> Option<(usize, usize)> {
         (position <= self.len()).then(|| {
             let n = newline_indices(&self.data[..position]);
@@ -589,6 +614,7 @@ impl GString {
 
     See also the [`GString::coordinates`] method.
     */
+    #[must_use]
     pub fn position(&self, coordinates: (usize, usize)) -> Option<usize> {
         if self.is_empty() {
             // Empty, so only valid coordinate is `(0, 0)` and position is `0`
@@ -614,7 +640,7 @@ impl GString {
                         } else if column < last_column {
                             // Valid column
                             // Sum lengths of prior lines and add the column
-                            Some(lines[..row].iter().map(|line| line.len()).sum::<usize>() + column)
+                            Some(lines[..row].iter().map(GString::len).sum::<usize>() + column)
                         } else {
                             // Invalid column
                             None
@@ -642,6 +668,7 @@ impl GString {
     assert_eq!(GString::from("\n\n").newlines(), &[0, 1]);
     ```
     */
+    #[must_use]
     pub fn newlines(&self) -> Vec<usize> {
         newline_indices(&self.data)
     }
@@ -661,7 +688,7 @@ impl GString {
     ```
     */
     pub fn insert(&mut self, index: usize, string: &str) {
-        self.splice(index..index, string);
+        let _ = self.splice(index..index, string);
     }
 
     /**
@@ -762,6 +789,7 @@ impl GString {
 
     [`RangeFull`]: std::ops::RangeFull
     */
+    #[must_use]
     pub fn splice<R: RangeBounds<usize>>(&mut self, range: R, replace_with: &str) -> GString {
         let data = self
             .data
@@ -802,6 +830,7 @@ impl GString {
 
     [`RangeFull`]: std::ops::RangeFull
     */
+    #[must_use]
     pub fn drain<R: RangeBounds<usize>>(&mut self, range: R) -> GString {
         let data = self.data.drain(range).collect::<Vec<_>>();
         let shape = calc_shape(&data);
@@ -829,6 +858,7 @@ impl GString {
 
     See also the [`GString::index`] method.
     */
+    #[must_use]
     pub fn slice(&self, range: Range<usize>) -> GString {
         let data = self.data[range].to_vec();
         let shape = calc_shape(&data);
@@ -866,6 +896,7 @@ impl GString {
     assert_eq!(shape[4], 3);
     ```
     */
+    #[must_use]
     pub fn shape(&self) -> &[usize] {
         &self.shape
     }
@@ -912,6 +943,8 @@ impl GString {
         - Position (offset) below
     3. The last row shows the column and position one grapheme past the end.
     */
+    #[allow(clippy::missing_panics_doc)]
+    #[must_use]
     pub fn shape_string(&self) -> String {
         let mut r = String::new();
 
@@ -931,7 +964,7 @@ impl GString {
                 r,
                 "{row_space} {}",
                 (0..=max_column)
-                    .map(|x| { format!("{x:00$}", e).chars().nth(n).unwrap().to_string() })
+                    .map(|x| { format!("{x:0e$}").chars().nth(n).unwrap().to_string() })
                     .collect::<Vec<_>>()
                     .join(" "),
             )
@@ -943,14 +976,14 @@ impl GString {
         let mut position = 0;
         for (row, line) in self.lines().iter().enumerate() {
             // Row column header above
-            let max_column = self.shape[row] + if row == last_row { 1 } else { 0 };
+            let max_column = self.shape[row] + usize::from(row == last_row);
             let e = n_digits(max_column + 1);
             for n in 0..e {
                 writeln!(
                     r,
                     "{row_space} {}",
                     (0..=max_column)
-                        .map(|x| { format!("{x:00$}", e).chars().nth(n).unwrap().to_string() })
+                        .map(|x| { format!("{x:0e$}").chars().nth(n).unwrap().to_string() })
                         .collect::<Vec<_>>()
                         .join(" "),
                 )
@@ -982,7 +1015,7 @@ impl GString {
                     r,
                     "{row_space} {}",
                     (a..=b)
-                        .map(|x| { format!("{x:00$}", e).chars().nth(n).unwrap().to_string() })
+                        .map(|x| { format!("{x:0e$}").chars().nth(n).unwrap().to_string() })
                         .collect::<Vec<_>>()
                         .join(" "),
                 )
@@ -1014,6 +1047,8 @@ impl GString {
 
     See also the [`GString::into_iter`] method.
     */
+    #[allow(clippy::iter_without_into_iter)]
+    #[must_use]
     pub fn iter(&self) -> GStringRefIter<'_> {
         GStringRefIter {
             gstring: self,
@@ -1041,6 +1076,7 @@ impl GString {
     See also the [`GString::iter`] method.
     */
     #[allow(clippy::should_implement_trait)]
+    #[must_use]
     pub fn into_iter(self) -> GStringIter {
         GStringIter {
             gstring: self,
@@ -1071,7 +1107,7 @@ impl std::fmt::Display for GString {
     ```
     */
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        for g in self.data.iter() {
+        for g in &self.data {
             write!(f, "{g}")?;
         }
         Ok(())
@@ -1448,6 +1484,7 @@ let g = graphemes(S);
 assert_eq!(g, G);
 ```
 */
+#[must_use]
 pub fn graphemes(s: &str) -> Vec<Grapheme> {
     s.graphemes(true)
         .map(|g| Grapheme {
@@ -1497,5 +1534,5 @@ fn lines(data: &[Grapheme]) -> Vec<GString> {
 
 /// Find the number of base 10 digits in a number
 fn n_digits(number: usize) -> usize {
-    (number as f64).log10().ceil() as usize
+    format!("{number}").len()
 }
