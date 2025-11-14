@@ -29,4 +29,5 @@
 * 0.12.0 (2025-09-02): Update dependencies; 2024 edition
 * 0.13.0 (2025-10-27): Add `Grapheme` as a better abstraction than `String`; update dependencies
     * 0.13.1 (2025-11-12): Update dependencies; clippy fixes
+    * 0.13.2 (2025-11-14): Update dependencies (none); add `clippy::pedantic` to `cargo clippy` command in the `clippy` target in the makefile
 
